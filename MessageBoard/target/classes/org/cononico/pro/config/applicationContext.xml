@@ -1,0 +1,116 @@
+<beans xmlns="http://www.springframework.org/schema/beans"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:aop="http://www.springframework.org/schema/aop"  
+    xmlns:tx="http://www.springframework.org/schema/tx" 
+    xmlns:context="http://www.springframework.org/schema/context"  
+    xsi:schemaLocation="  
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd  
+       http://www.springframework.org/schema/aop 
+       http://www.springframework.org/schema/aop/spring-aop-3.1.xsd  
+       http://www.springframework.org/schema/tx 
+       http://www.springframework.org/schema/tx/spring-tx-3.1.xsd  
+       http://www.springframework.org/schema/context 
+       http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+    
+    <!--  启动注解扫描 -->     
+    <context:component-scan base-package="org.cononico.pro.bean"/>   
+   
+     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+         <property name="locations">
+          <value>classpath:jdbc.properties</value>
+         </property>
+     </bean>
+    
+		
+   <!-- 数据库映射 -->
+   <bean id="dataSource" destroy-method="close" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName}" />
+        <property name="url" value="${jdbc.url}" />
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password}" />
+   </bean>
+     
+     <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+          <property name="dataSource" ref="dataSource"></property>
+          
+          <!-- 扫描映射文件，实体类 --> 
+          <property name="packagesToScan">
+              <list>
+                  <value>org.cononico.pro.bean</value>
+              </list>
+          </property>
+          
+          <property name="hibernateProperties">
+	      <value>
+	        hibernate.dialect=org.hibernate.dialect.MySQLDialect
+	        hibernate.hbm2ddl.auto=update
+            hibernate.show_sql=true
+            hibernate.format_sql=true
+	      </value>
+	    </property>	  
+     </bean>
+     
+     <bean id="messageDao" class="org.cononico.pro.daoImpl.MessageImpl">
+         <property name="sessionFactory">
+             <ref bean="sessionFactory"></ref>
+         </property>
+     </bean>
+     
+     <bean id="messageService" class="org.cononico.pro.service.MessageServiceImpl">
+         <property name="messageDao">
+              <ref bean="messageDao"/>
+          </property> 
+     </bean>
+     
+     <bean id="messageReplyDao" class="org.cononico.pro.daoImpl.MessageReplyImpl">
+     	<property name="sessionFactory">
+     		<ref bean="sessionFactory"></ref>
+     	</property>
+     </bean>
+     
+     <bean id="messageReplyService" class="org.cononico.pro.service.MessageReplyServiceImpl">
+     	<property name="messageReplyDao">
+     		<ref bean="messageReplyDao"></ref>
+     	</property> 
+     </bean>
+     
+     <aop:aspectj-autoproxy expose-proxy="true"/>
+     <!-- 事务管理器，这里可以设置多个 -->  
+     <tx:annotation-driven transaction-manager="H4TxManager"/>
+     
+     <!-- 给事务注入sessionFactory属性 -->  
+     <bean id="H4TxManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+         <property name="sessionFactory" ref="sessionFactory" />  
+     </bean>  
+     
+     <!-- 事务属性配置 -->  
+    <tx:advice id="txAdvice" transaction-manager="H4TxManager">  
+        <tx:attributes>  
+            <!-- 方法对应的传播属性 -->  
+            <tx:method name="save*" propagation="REQUIRED" />  
+            <tx:method name="add*" propagation="REQUIRED" />  
+            <tx:method name="create*" propagation="REQUIRED" />  
+            <tx:method name="insert*" propagation="REQUIRED" />  
+            <tx:method name="update*" propagation="REQUIRED" />  
+            <tx:method name="merge*" propagation="REQUIRED" />  
+            <tx:method name="del*" propagation="REQUIRED" />  
+            <tx:method name="remove*" propagation="REQUIRED" />  
+            <tx:method name="put*" propagation="REQUIRED" />  
+            <tx:method name="use*" propagation="REQUIRED"/>  
+            
+            
+            <tx:method name="get*" propagation="REQUIRED" read-only="true" />  
+            <tx:method name="count*" propagation="REQUIRED" read-only="true" />  
+            <tx:method name="find*" propagation="REQUIRED" read-only="true" />  
+            <tx:method name="list*" propagation="REQUIRED" read-only="true" />  
+            <tx:method name="*" read-only="true" />  
+        </tx:attributes>  
+    </tx:advice>  
+    
+    <!-- 事务控制位置，一般在业务层service -->  
+    <aop:config>  
+        <aop:pointcut id="txPointcut" expression="execution(* org.echo.pro.serviceImpl.*.*(..))" />  
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut"/>  
+    </aop:config>
+</beans>

@@ -1,0 +1,28 @@
+<!DOCTYPE hibernate-configuration PUBLIC
+	"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+	<session-factory>
+		<property name="show_sql">true</property>
+		
+		<!-- 格式化sql语句 -->
+		<property name="format_sql">true</property>
+		
+		<!-- 驱动 -->
+		<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+		<!-- 数据库url -->
+		<property name="hibernate.connection.url">jdbc:mysql:///kapok</property>
+		<!-- 数据库名-->
+		<property name="hibernate.connection.username">root</property>
+		<!-- 数据库密码 -->
+		<property name="hibernate.connection.password">2720mh</property>
+		
+		<!-- 方言设置 -->
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+		
+		<!-- 自动创建表结构 -->
+		<property name="hibernate.hbm2ddl.auto">update</property>
+		
+	</session-factory>
+</hibernate-configuration>
